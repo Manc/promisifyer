@@ -1,6 +1,8 @@
 # Promisifyer
 
-[![Build Status](https://travis-ci.org/Manc/promisifyer.svg?branch=master)](https://travis-ci.org/Manc/promisifyer)
+[![Build Status][travis-image]][travis-url]
+[![NPM version][npm-version-image]][npm-url]
+[![MIT License][license-image]][license-url]
 
 **Promisifyer** is a tiny JavaScript (TypeScript) utility with no further dependencies that makes it easy to turn expected JavaScript events from sources that are technically independent from the code that initially triggered them (e.g. Web Worker, WebSocket, other browser or Node.js events), but logically related to something that has been triggered by code into one clean native `Promise`.
 
@@ -58,3 +60,14 @@ doSomething("World")
 ```
 
 Promisifyer manages the references and timeouts for you. Your responsibility is to adapt your asynchronous chain of passing data around to include the reference that is generated for each run.
+
+
+
+[travis-url]: https://travis-ci.org/Manc/promisifyer
+[travis-image]: https://img.shields.io/travis/Manc/promisifyer/master.svg?style=flat
+
+[npm-url]: https://npmjs.org/package/promisifyer
+[npm-version-image]: https://img.shields.io/npm/v/promisifyer.svg?style=flat
+
+[license-image]: https://img.shields.io/badge/license-MIT-blue.svg?style=flat
+[license-url]: LICENSE
