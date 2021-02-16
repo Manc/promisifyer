@@ -1,19 +1,28 @@
 {
   "name": "promisifyer",
   "version": "0.0.1",
-  "description": "Merge an independant event into a native Promise",
-  "main": "dist/index.js",
+  "description": "Turn code-triggered response events into predictable native Promises",
   "scripts": {
     "build": "rm -rf dist && tsc",
     "lint": "eslint 'src/**/*.ts'",
     "test": "jest"
   },
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
   "repository": {
     "url": "https://github.com/Manc/promisifyer.git",
     "type": "git"
   },
+  "bugs": {
+    "url": "https://github.com/Manc/promisifyer/issues"
+  },
   "keywords": [
-    "promise"
+    "event",
+    "promise",
+    "promisify"
   ],
   "homepage": "https://github.com/Manc/promisifyer",
   "author": "Nick Singleton",

@@ -1,10 +1,10 @@
 export class PromisifyerTimeout extends Error {
-	public readonly requestID: number;
+	public readonly reference: number;
 
-	constructor(requestID: number) {
-		super(`Request ${requestID} timed out`);
+	constructor(reference: number) {
+		super(`Request ${reference} timed out`);
 		this.name = "PromisifyerTimeout";
-		this.requestID = requestID;
+		this.reference = reference;
 	}
 }
 
@@ -16,9 +16,17 @@ interface PendingTask<T> {
 }
 
 interface PromisifyerOptions {
-	/** Default timeout in milliseconds (default: 3000). */
+	/**
+	 * Timeout in milliseconds that is applied to all `run` requests.
+	 * 
+	 * Default: 3000
+	 */
 	timeout: number;
 }
+
+const defaultOptions: PromisifyerOptions = {
+	timeout: 3000,
+};
 
 /**
  * Merges two technically unrelated events into one Promise with a timeout.
@@ -26,7 +34,6 @@ interface PromisifyerOptions {
 export default class Promisifyer<T> {
 	private options: PromisifyerOptions;
 	private idCounter = 0;
-
 	private pendingTasks = new Map<number, PendingTask<T>>();
 
 	/**
@@ -35,25 +42,25 @@ export default class Promisifyer<T> {
 	 */
 	constructor (options?: Partial<PromisifyerOptions>) {
 		this.options = {
-			timeout: 3000,
+			...defaultOptions,
 			...(options || {}),
 		};
 	}
 
-	public run(task: (requestID: number) => void): Promise<T> {
-		const requestID = ++this.idCounter;
+	public run(task: (ref: number) => void): Promise<T> {
+		const reference = ++this.idCounter;
 
 		return new Promise<T>((resolver, reject) => {
 			const timeout = setTimeout(() => {
 				// If the task is still registered now (after the timeout has elapsed),
 				// cancel the request by removing the registration and rejecting the Promise.
-				if (this.pendingTasks.has(requestID)) {
-					this.pendingTasks.delete(requestID);
-					reject(new PromisifyerTimeout(requestID));
+				if (this.pendingTasks.has(reference)) {
+					this.pendingTasks.delete(reference);
+					reject(new PromisifyerTimeout(reference));
 				}
 			}, this.options.timeout);
 
-			this.pendingTasks.set(requestID, {
+			this.pendingTasks.set(reference, {
 				resolver,
 				timeout,
 			});
@@ -61,21 +68,23 @@ export default class Promisifyer<T> {
 			// Execute the task by passing in the request ID. It's the task's responsibility
 			// to pass on the request ID as needed in order to make the event later return the
 			// same  ID when `this.handler` is being called.
-			task(requestID);
+			task(reference);
 		});
 	}
 
 	/**
-	 * This method must be registered as the event handler for the event that will
-	 * provide the data we’re waiting for, e.g. a WebSocket event.
+	 * This method must be used as or called in the event handler for the event
+	 * that will provide the data we’re waiting for, e.g. a WebSocket event.
+	 * @param reference The original reference that had been passed around.
+	 * @param data The actual response data.
 	 */
-	public handler(originalRequestID: number, data: T): void {
+	public handler(reference: number, data: T): void {
 		// Check if we're still interested in this event.
-		const pendingTask = originalRequestID > 0 && this.pendingTasks.get(originalRequestID);
+		const pendingTask = reference > 0 && this.pendingTasks.get(reference);
 		if (pendingTask) {
 			const { resolver, timeout } = pendingTask;
 			clearTimeout(timeout as number);
-			this.pendingTasks.delete(originalRequestID);
+			this.pendingTasks.delete(reference);
 			resolver(data);
 		}
 	}
